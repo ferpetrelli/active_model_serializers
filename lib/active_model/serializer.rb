@@ -66,6 +66,7 @@ module ActiveModel
     class_attribute :_associations
     self._associations = {}
 
+    class_attribute :_jsonapi_format
     class_attribute :_root
     class_attribute :_embed
     self._embed = :objects
@@ -257,6 +258,12 @@ module ActiveModel
       end
       alias_method :root=, :root
 
+      # Defines if serialization uses jsonapi.org format.
+      def jsonapi_format(value)
+        self._jsonapi_format = value
+      end
+      alias_method :jsonapi_format=, :jsonapi_format
+
       # Used internally to create a new serializer object based on controller
       # settings and options for a given resource. These settings are typically
       # set during the request lifecycle or by the controller class, and should
@@ -305,14 +312,19 @@ module ActiveModel
     end
 
     def root_name
-      return false if self._root == false
+      return false if self._root == false && self._jsonapi_format != true
 
-      class_name = self.class.name.demodulize.underscore.sub(/_serializer$/, '').to_sym unless self.class.name.blank?
+      base_name  = self.class.name.demodulize.underscore.sub(/_serializer$/, '') unless self.class.name.blank?
+      class_name = base_name.to_sym if base_name
 
       if self._root == true
         class_name
       else
-        self._root || class_name
+        if self._jsonapi_format == true && self._root.nil? && base_name
+          base_name.pluralize.to_sym
+        else
+          self._root || class_name
+        end
       end
     end
 
@@ -327,7 +339,7 @@ module ActiveModel
     end
 
     def serialize_object
-      serializable_hash
+      self.class._jsonapi_format ? [serializable_hash] : serializable_hash
     end
 
     # Returns a hash representation of the serializable
@@ -336,6 +348,7 @@ module ActiveModel
       return nil if @object.nil?
       @node = attributes
       include_associations! if _embed
+      # self.class._jsonapi_format && !@node.respond_to?(:[]) ? [@node] : @node
       @node
     end
 

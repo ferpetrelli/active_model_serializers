@@ -134,36 +134,52 @@ module ActiveModel
         end
 
         def serialize
-          if object
-            if polymorphic?
-              {
-                :type => polymorphic_key,
-                polymorphic_key => find_serializable(object).serializable_hash
-              }
-            else
-              find_serializable(object).serializable_hash
+          value = begin
+            if object
+              if polymorphic?
+                {
+                  :type => polymorphic_key,
+                  polymorphic_key => find_serializable(object).serializable_hash
+                }
+              else
+                find_serializable(object).serializable_hash
+              end
             end
+          end
+
+          if serializer_class && serializer_class._jsonapi_format == true
+            [value]
+          else
+            value
           end
         end
 
         def serialize_ids
-          if object
-            serializer = find_serializable(object)
-            id =
-              if serializer.respond_to?(embed_key)
-                serializer.send(embed_key)
-              else
-                object.read_attribute_for_serialization(embed_key)
-              end
+          value = begin
+            if object
+              serializer = find_serializable(object)
+              id =
+                if serializer.respond_to?(embed_key)
+                  serializer.send(embed_key)
+                else
+                  object.read_attribute_for_serialization(embed_key)
+                end
 
-            if polymorphic?
-              {
-                type: polymorphic_key,
-                id: id
-              }
-            else
-              id
+              if polymorphic?
+                {
+                  type: polymorphic_key,
+                  id: id
+                }
+              else
+                id
+              end
             end
+          end
+
+          if serializer_class && serializer_class._jsonapi_format == true
+            [value]
+          else
+            value
           end
         end
 

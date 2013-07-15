@@ -218,7 +218,7 @@ class SerializerJsonapiTest < ActiveModel::TestCase
     json = Jsonapi::BlogSerializer.new(blog, scope: user).as_json
     assert_equal({
       blogs: [{
-        author: [{
+        authors: [{
           first_name: "Jose",
           last_name: "Valim"
         }]

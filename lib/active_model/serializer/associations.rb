@@ -53,7 +53,7 @@ module ActiveModel
         elsif use_id_key?
           id_key
         else
-          name
+          name.to_s.pluralize
         end
       end
 
@@ -147,11 +147,7 @@ module ActiveModel
             end
           end
 
-          if serializer_class && serializer_class._jsonapi_format == true
-            [value]
-          else
-            value
-          end
+          [value]
         end
 
         def serialize_ids
@@ -176,11 +172,7 @@ module ActiveModel
             end
           end
 
-          if serializer_class && serializer_class._jsonapi_format == true
-            [value]
-          else
-            value
-          end
+          [value]
         end
 
         private
